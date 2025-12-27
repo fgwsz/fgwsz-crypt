@@ -1,10 +1,11 @@
 #include<cstddef>//::std::size_t
 #include<cstdint>//::std::uint8_t ::std::uint16_t ::std::uint64_t
 #include<ios>//::std::ios ::std::streamsize
-#include<iostream>//::std::cout ::std::cin
+#include<iostream>//::std::cout ::std::cin ::std::cerr
 #include<string>//::std::string
 #include<vector>//::std::vector
 #include<fstream>//::std::ifstream ::std::ofstream
+#include<exception>//::std::exception
 #include<stdexcept>// ::std::runtime_error
 #include<filesystem>//::std::filesystem
 
@@ -205,7 +206,7 @@ bool is_big_endian(void){
         auto relative_path_string=file.relative_path.string();
         //写入相对路径的字节数(这部分占用8字节)
         relative_path_bytes=static_cast<::std::uint64_t>(
-            relative_path_string.length()
+            relative_path_string.size()
         );
         //首先把uint64_t从主机序转变为网络序
         //把网络序写入char[8]
@@ -474,55 +475,60 @@ int main(int argc,char* argv[]){
     //输入参数太少
     if(argc<4){
         ::help();
-        return -1;
+        return 1;
     }
-    //检查是不是解包模式
-    if(argc==4){
-        if("-x"!=::std::string{argv[1]}){
-            ::help();
-            return -1;
-        }
-        //解包模式
-        //得到包文件路径
-        ::std::filesystem::path package_path=argv[2];
-        //得到输出目录路径
-        ::std::filesystem::path output_directory_path=argv[3];
-        //根据包文件路径得到二进制字节序列
-        ::std::vector<char> byte_array=::read_package(package_path);
-        //将二进制字节序列解析为文件结构体序列
-        ::std::vector<::File> files=::extract_package(byte_array);
-        //将文件结构体序列中的每个成员解包为对应的文件
-        ::extract_files(files,output_directory_path);
-    }else{
-        if("-a"!=::std::string{argv[1]}){
-            ::help();
-            return -1;
-        }
-        if("-o"!=::std::string{argv[argc-2]}){
-            ::help();
-            return -1;
-        }
-        //打包模式
-        //得到输入路径序列
-        ::std::vector<::std::filesystem::path> input_paths={};
-        for(int index=2;index<argc-2;++index){
-            //检查输入路径是否存在
-            ::std::filesystem::path input_path=argv[index];
-            if(!::std::filesystem::exists(input_path)){
-                throw ::std::runtime_error(
-                    "Input path does not exist:"+input_path.string()
-                );
+    try{
+        //检查是不是解包模式
+        if(argc==4){
+            if("-x"!=::std::string{argv[1]}){
+                ::help();
+                return 1;
             }
-            input_paths.emplace_back(input_path);
+            //解包模式
+            //得到包文件路径
+            ::std::filesystem::path package_path=argv[2];
+            //得到输出目录路径
+            ::std::filesystem::path output_directory_path=argv[3];
+            //根据包文件路径得到二进制字节序列
+            ::std::vector<char> byte_array=::read_package(package_path);
+            //将二进制字节序列解析为文件结构体序列
+            ::std::vector<::File> files=::extract_package(byte_array);
+            //将文件结构体序列中的每个成员解包为对应的文件
+            ::extract_files(files,output_directory_path);
+        }else{//argc>4
+            if("-a"!=::std::string{argv[1]}){
+                ::help();
+                return 1;
+            }
+            if("-o"!=::std::string{argv[argc-2]}){
+                ::help();
+                return 1;
+            }
+            //打包模式
+            //得到输入路径序列
+            ::std::vector<::std::filesystem::path> input_paths={};
+            for(int index=2;index<argc-2;++index){
+                //检查输入路径是否存在
+                ::std::filesystem::path input_path=argv[index];
+                if(!::std::filesystem::exists(input_path)){
+                    throw ::std::runtime_error(
+                        "Input path does not exist:"+input_path.string()
+                    );
+                }
+                input_paths.emplace_back(input_path);
+            }
+            //得到包文件输出路径
+            ::std::filesystem::path output_package_path=argv[argc-1];
+            //使用输入路径序列来构造文件结构体序列
+            ::std::vector<::File> files=::read_paths(input_paths);
+            //将文件结构体序列转换为二进制字节序列
+            ::std::vector<char> byte_array=::create_package(files);
+            //将二进制字节序列写入包输出文件
+            ::write_package(output_package_path,byte_array);
         }
-        //得到包文件输出路径
-        ::std::filesystem::path output_package_path=argv[argc-1];
-        //使用输入路径序列来构造文件结构体序列
-        ::std::vector<::File> files=::read_paths(input_paths);
-        //将文件结构体序列转换为二进制字节序列
-        ::std::vector<char> byte_array=::create_package(files);
-        //将二进制字节序列写入包输出文件
-        ::write_package(output_package_path,byte_array);
+    }catch(::std::exception const& e){
+        ::std::cerr<<"Error:"<<e.what()<<'\n';
+        return 1;
     }
     return 0;
 }
