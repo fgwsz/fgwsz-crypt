@@ -509,7 +509,10 @@ int main(int argc,char* argv[]){
             if(!::std::filesystem::exists(input_path)){
                 throw ::std::runtime_error("路径不存在"+input_path.string());
             }
-            input_paths.emplace_back(input_path);
+            //托展为绝对路径,避免出现如下情况:
+            //path:file.txt parent_path:"" is_directory() false
+            //path:./file.txt parent_path:"./" is_directory true
+            input_paths.emplace_back(::std::filesystem::absolute(input_path));
         }
         //得到包文件输出路径
         ::std::filesystem::path output_package_path=argv[argc-1];
