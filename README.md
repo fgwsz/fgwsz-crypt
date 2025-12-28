@@ -1,6 +1,8 @@
 # fgwsz-package
+`fgwsz-package`是一个进行打包和解包的工具,
+用它打包的包内容使用随机编码混淆.  
 ```txt
-作者制定了归档一个或多个(文件/目录)的包标准:
+fgwsz-package归档一个或多个(文件/目录)的包标准:
     包的二进制的文件结构如下:
         [file item 1]...[file item N]
     每个文件的二进制信息[file item]的文件结构是[A|B|C|D]:
@@ -9,7 +11,7 @@
         C部分是[content bytes(8字节)]
         D部分是[content(binary)]
 ```
-使用`fgwsz-package`进行打包和解包  
+`fgwsz-package`的命令行使用方式如下:  
 ```txt
 Usages:
     Pack  : -c <output package path> <input path 1> ... <input path N>
