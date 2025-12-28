@@ -37,12 +37,33 @@ struct File{
     File(File&&)noexcept=default;
     File& operator=(File&&)noexcept=default;
 };
+//检查相对路径是否安全
+bool is_safe_relative_path(::std::filesystem::path const& relative_path){
+    //空路径一定存在逻辑错误
+    if(relative_path.empty()){
+        return false;
+    }
+    for(auto const& component:relative_path){
+        //若包含"..",则存在文件溢出输出路径的风险
+        if(".."==component){
+            return false;
+        }
+    }
+    return true;
+}
 //打包模式
 //通过文件路径构造文件结构体
 ::File read_file(
     ::std::filesystem::path const& file_path
     ,::std::filesystem::path const& base_path
 ){
+    //检查文件路径是否为符号链接
+    if(::std::filesystem::is_symlink(file_path)){
+        //读取符号链接内容设置为未定义行为
+        throw ::std::runtime_error(
+            "Read symlink file(UB):"+file_path.string()
+        );
+    }
     //检查输入参数有效性
     ::std::ifstream file(file_path,::std::ios::binary|::std::ios::ate);
     //文件打不开
@@ -55,8 +76,14 @@ struct File{
             "Base path isn't directory:"+base_path.string()
         );
     }
-    //根据基准路路径和文件路径得到归档之后的相对路径
+    //根据基准路径和文件路径得到归档之后的相对路径
     auto relative_path=::std::filesystem::proximate(file_path,base_path);
+    //检查文件的相对路径是否安全(不安全情况,存在溢出输出目录的风险)
+    if(!::is_safe_relative_path(relative_path)){
+        throw ::std::runtime_error(
+            "File relative path is unsafe:"+relative_path.string()
+        );
+    }
     //设置返回值初始值
     auto ret=::File{relative_path,::std::vector<char>{}};
     //读取文件内容
@@ -93,13 +120,22 @@ struct File{
     ::std::vector<::File> ret={};
     //递归遍历所有的文件进行读取
     try{
+        ::std::filesystem::file_status status={};
         for(::std::filesystem::directory_entry const& dir_entry
             : ::std::filesystem::recursive_directory_iterator(dir_path)
         ){
-            //对所有的文件进行读取
-            if(!::std::filesystem::is_directory(dir_entry.path())){
-                ret.emplace_back(::read_file(dir_entry.path(),dir_path));
+            //检查条目状态(不追踪符号链接)
+            status=dir_entry.symlink_status();
+            //跳过所有的目录
+            if(::std::filesystem::is_directory(status)){
+                continue;
             }
+            //跳过所有符号链接文件,避免出现相对路径溢出解包输出路径的问题
+            if(::std::filesystem::is_symlink(status)){
+                continue;
+            }
+            //只对文件进行读取
+            ret.emplace_back(::read_file(dir_entry.path(),dir_path));
         }
     }catch(::std::filesystem::filesystem_error const& e){
         throw ::std::runtime_error(
@@ -402,6 +438,12 @@ void extract_file(
     ,::std::filesystem::path const& output_dir_path=
         ::std::filesystem::current_path()
 ){
+    //检查文件的相对路径是否安全(不安全情况,存在溢出输出目录的风险)
+    if(!::is_safe_relative_path(file.relative_path)){
+        throw ::std::runtime_error(
+            "File relative path is unsafe:"+file.relative_path.string()
+        );
+    }
     //构建输出文件路径
     ::std::filesystem::path file_path=
         output_dir_path/file.relative_path.string();
@@ -469,11 +511,13 @@ static bool const std_cout_init=[](void){
 }();
 void help(void){
     ::std::cout<<
-        "Usage(Pack  ): -a <input path> ... -o <output package path>\n"
-        "Usage(Unpack): -x <input package path> <output directory path>\n"
-        "Examples:\n"
-        "  Pack a file and directory: -a README.md source -o 0.fgwsz\n"
-        "  Unpack                   : -x 0.fgwsz output\n";
+R"(Usages:
+    Pack  : -c <output package path> <input path 1> ... <input path N>
+    Unpack: -x <input package path> <output directory path>
+Examples:
+    Pack a file and directory: -c mypkg.fgwsz README.md source
+    Unpack                   : -x mypkg.fgwsz output
+)";
 }
 int main(int argc,char* argv[]){
     //输入参数太少
@@ -481,14 +525,19 @@ int main(int argc,char* argv[]){
         ::help();
         return 1;
     }
+    //检查功能选项
+    ::std::string option=argv[1];
+    if(option!="-c"&&option!="-x"){
+        ::help();
+        return 1;
+    }
     try{
-        //检查是不是解包模式
-        if(argc==4){
-            if("-x"!=::std::string{argv[1]}){
+        if('x'==option[1]){//解包模式
+            //排除解包模式输入参数过多的情况
+            if(argc>4){
                 ::help();
                 return 1;
             }
-            //解包模式
             //得到包文件路径
             ::std::filesystem::path package_path=argv[2];
             //得到输出目录路径
@@ -499,19 +548,13 @@ int main(int argc,char* argv[]){
             ::std::vector<::File> files=::extract_package(byte_array);
             //将文件结构体序列中的每个成员解包为对应的文件
             ::extract_files(files,output_directory_path);
-        }else{//argc>4
-            if("-a"!=::std::string{argv[1]}){
-                ::help();
-                return 1;
-            }
-            if("-o"!=::std::string{argv[argc-2]}){
-                ::help();
-                return 1;
-            }
-            //打包模式
+        }else{//打包模式
+            //得到包文件输出路径
+            ::std::filesystem::path output_package_path=argv[2];
             //得到输入路径序列
             ::std::vector<::std::filesystem::path> input_paths={};
-            for(int index=2;index<argc-2;++index){
+            input_paths.reserve(argc-3);
+            for(int index=3;index<argc;++index){
                 //检查输入路径是否存在
                 ::std::filesystem::path input_path=argv[index];
                 if(!::std::filesystem::exists(input_path)){
@@ -521,8 +564,6 @@ int main(int argc,char* argv[]){
                 }
                 input_paths.emplace_back(input_path);
             }
-            //得到包文件输出路径
-            ::std::filesystem::path output_package_path=argv[argc-1];
             //使用输入路径序列来构造文件结构体序列
             ::std::vector<::File> files=::read_paths(input_paths);
             //将文件结构体序列转换为二进制字节序列

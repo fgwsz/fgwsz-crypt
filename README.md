@@ -11,9 +11,10 @@
 ```
 使用`fgwsz-package`进行打包和解包  
 ```txt
-Usage(Pack  ): -a <input path> ... -o <output package path>
-Usage(Unpack): -x <input package path> <output directory path>
+Usages:
+    Pack  : -c <output package path> <input path 1> ... <input path N>
+    Unpack: -x <input package path> <output directory path>
 Examples:
-  Pack a file and directory: -a README.md source -o 0.fgwsz
-  Unpack                   : -x 0.fgwsz output
+    Pack a file and directory: -c mypkg.fgwsz README.md source
+    Unpack                   : -x mypkg.fgwsz output
 ```
