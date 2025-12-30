@@ -13,7 +13,7 @@ namespace fgwsz{
 //用于错误处理的字符串信息
 inline ::std::string what(
     ::std::string const& message
-    ,::std::source_location location=::std::source_location::current()
+    ,::std::source_location const& location=::std::source_location::current()
 ){
     return ::std::format(
         "file: {}({}:{}) `{}`: {}"
@@ -27,7 +27,7 @@ inline ::std::string what(
 }//namespace fgwsz
 
 //抛出运行时异常(简化宏定义)
-#define FGWSZ_THROW_RUNTIME_ERROR(...) do{\
+#define FGWSZ_THROW_WHAT(...) do{\
     throw ::std::runtime_error(::fgwsz::what(__VA_ARGS__)); \
 }while(0) \
 //
