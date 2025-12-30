@@ -160,9 +160,21 @@ void Packer::pack_dir(::std::filesystem::path const& dir_path){
     //检查路径是否指向目录
     ::fgwsz::path_assert_is_directory(dir_path);
     //递归遍历所有的子文件进行打包
+    ::std::filesystem::file_status status={};
     for(::std::filesystem::directory_entry const& dir_entry
         : ::std::filesystem::recursive_directory_iterator(dir_path)
     ){
+        //检查符号状态(不追踪符号链接)
+        status=dir_entry.symlink_status();
+        //跳过所有子目录
+        if(::std::filesystem::is_directory(status)){
+            continue;
+        }
+        //跳过所有符号链接
+        if(::std::filesystem::is_symlink(status)){
+            continue;
+        }
+        //只对文件进行打包
         this->pack_file(dir_entry.path(),dir_path);
     }
 }
