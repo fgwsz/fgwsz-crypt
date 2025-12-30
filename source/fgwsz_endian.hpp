@@ -27,9 +27,9 @@ inline constexpr Type_ host_to_net(Type_ host_data){
     if constexpr(::fgwsz::is_big_endian()){
         return host_data;
     }else{
-        ::EndianHelper<Type_> host;
+        ::fgwsz::EndianHelper<Type_> host;
         host.data=host_data;
-        ::EndianHelper<Type_> net;
+        ::fgwsz::EndianHelper<Type_> net;
         for(::std::size_t index=0;index<sizeof(Type_);++index){
             net.byte_array[sizeof(Type_)-1-index]=
                 host.byte_array[index];
@@ -43,9 +43,9 @@ inline constexpr Type_ net_to_host(Type_ net_data){
     if constexpr(::fgwsz::is_big_endian()){
         return net_data;
     }else{
-        ::EndianHelper<Type_> net;
+        ::fgwsz::EndianHelper<Type_> net;
         net.data=net_data;
-        ::EndianHelper<Type_> host;
+        ::fgwsz::EndianHelper<Type_> host;
         for(::std::size_t index=0;index<sizeof(Type_);++index){
             host.byte_array[sizeof(Type_)-1-index]=
                 net.byte_array[index];

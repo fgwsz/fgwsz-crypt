@@ -9,19 +9,16 @@
 //============================================================================
 namespace fgwsz{
 namespace detail{
-inline ::std::ostream& optimized_cout(void){
-    static ::std::ostream& ret=[](void){
-        //关闭与C语言的输入输出流同步
-        ::std::ios_base::sync_with_stdio(false);
-        //解除cin和cout的绑定
-        ::std::cin.tie(nullptr);
-        ::std::cout.tie(nullptr);
-        return ::std::cout;
-    }();
-    return ret;
-}
+static bool const std_cout_init=[](void){
+    //关闭与C语言的输入输出流同步
+    ::std::ios_base::sync_with_stdio(false);
+    //解除cin和cout的绑定
+    ::std::cin.tie(nullptr);
+    ::std::cout.tie(nullptr);
+    return true;
+}();
 }//namespace fgwsz::detail
-::std::ostream& cout=::fgwsz::detail::optimized_cout();
+inline ::std::ostream& cout=::std::cout;
 }//namespace fgwsz
 
 #endif//FGWSZ_COUT_HPP

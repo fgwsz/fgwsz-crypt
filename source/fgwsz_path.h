@@ -10,13 +10,13 @@
 //============================================================================
 namespace fgwsz{
 inline void path_assert_exists(::std::filesystem::path const& path){
-    if(!::std::filesystem::exist(path)){
-        FGWSZ_THROW_WHAT("path doesn't exist: "path.string());
+    if(!::std::filesystem::exists(path)){
+        FGWSZ_THROW_WHAT("path doesn't exist: "+path.string());
     }
 }
 inline void path_assert_not_exists(::std::filesystem::path const& path){
-    if(::std::filesystem::exist(path)){
-        FGWSZ_THROW_WHAT("path does exist: "path.string());
+    if(::std::filesystem::exists(path)){
+        FGWSZ_THROW_WHAT("path does exist: "+path.string());
     }
 }
 inline void path_assert_is_directory(::std::filesystem::path const& path){
@@ -71,10 +71,9 @@ inline void path_assert_is_safe_relative_path(
         FGWSZ_THROW_WHAT("relative path is unsafe: "+relative_path.string());
     }
 }
-inline void try_create_directorys(
+inline void try_create_directories(
     ::std::filesystem::path const& path
 ){
-    ::fgwsz::path_assert_is_directory(path);
     if(!::std::filesystem::exists(path)){
         ::std::filesystem::create_directories(path);
     }

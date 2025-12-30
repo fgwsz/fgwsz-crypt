@@ -16,11 +16,10 @@ inline ::std::string what(
     ,::std::source_location const& location=::std::source_location::current()
 ){
     return ::std::format(
-        "file: {}({}:{}) `{}`: {}"
+        "file: {}({}:{}): {}"
         ,location.file_name()
         ,location.line()
         ,location.column()
-        ,location.function_name()
         ,message
     );
 }
