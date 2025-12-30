@@ -11,12 +11,18 @@ fgwsz-package归档一个或多个(文件/目录)的包标准:
         C部分是[content bytes(8字节)]
         D部分是[content(binary)]
 ```
+`fgwsz-package`打包生成的包文件后缀名可以是任意名称.
+
+为了避免陷入要使用某个具有神秘后缀名的包,却不知道该用何种软件打开它的困境.  
+
+在此约定,使用`fgwsz-package`打包生成的包文件统一使用`.fgwsz`作为后缀名.
+
 `fgwsz-package`的命令行使用方式如下:  
 ```txt
 Usages:
     Pack  : -c <output package path> <input path 1> ... <input path N>
     Unpack: -x <input package path> <output directory path>
 Examples:
-    Pack a file and directory: -c mypkg.fgwsz README.md source
-    Unpack                   : -x mypkg.fgwsz output
+    Pack a file and directory: -c 0.fgwsz README.md source
+    Unpack                   : -x 0.fgwsz output
 ```
