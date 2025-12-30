@@ -1,17 +1,12 @@
-#include<cstddef>   //::std::size_t
-#include<cstdint>   //::std::uint8_t ::std::uint16_t ::std::uint64_t
-                    //::std::uint64_t
+#include<cstdint>   //::std::uint8_t ::std::uint64_t
 #include<ios>       //::std::ios ::std::streamsize
 #include<iostream>  //::std::cout ::std::cin ::std::cerr
-#include<iterator>  //::std::make_move_iterator
 #include<string>    //::std::string
 #include<vector>    //::std::vector
 #include<fstream>   //::std::ifstream ::std::ofstream
 #include<exception> //::std::exception
 #include<stdexcept> //::std::runtime_error
 #include<filesystem>//::std::filesystem
-#include<random>    //::std::uniform_int_distribution ::std::random_device
-                    //::std::mt19937
 #include<source_location>//::std::source_location
 #include<format>         //::std::format
 #include<bit>            //::std::endian
@@ -44,69 +39,6 @@ inline bool is_safe_relative_path(
         }
     }
     return true;
-}
-//============================================================================
-//异常处理相关
-//============================================================================
-//用于错误处理的字符串信息
-inline ::std::string what(
-    ::std::string const& message
-    ,::std::source_location location=::std::source_location::current()
-){
-    return ::std::format(
-        "file: {}({}:{}) `{}`: {}"
-        ,location.file_name()
-        ,location.line()
-        ,location.column()
-        ,location.function_name()
-        ,message
-    );
-}
-//抛出运行时异常(简化宏定义)
-#define THROW_RUNTIME_ERROR(...) do{\
-    throw ::std::runtime_error(::what(__VA_ARGS__)); \
-}while(0) \
-//
-//============================================================================
-//字节序相关
-//============================================================================
-//字节序辅助类
-template<typename UnsignedType>
-union EndianHelper{
-    ::std::uint8_t byte_array[sizeof(UnsignedType)];
-    UnsignedType number;
-};
-//将主机字节序无符号整数转换为同类型的网络字节序
-template<typename UnsignedType>
-inline constexpr UnsignedType host_to_net_uint(UnsignedType host_number){
-    if constexpr(::std::endian::native==::std::endian::big){
-        return host_number;
-    }else{
-        ::EndianHelper<UnsignedType> host;
-        host.number=host_number;
-        ::EndianHelper<UnsignedType> net;
-        for(::std::size_t index=0;index<sizeof(UnsignedType);++index){
-            net.byte_array[sizeof(UnsignedType)-1-index]=
-                host.byte_array[index];
-        }
-        return net.number;
-    }
-}
-//将网络字节序无符号整数转换为同类型的主机字节序
-template<typename UnsignedType>
-inline constexpr UnsignedType net_to_host_uint(UnsignedType net_number){
-    if constexpr(::std::endian::native==::std::endian::big){
-        return net_number;
-    }else{
-        ::EndianHelper<UnsignedType> net;
-        net.number=net_number;
-        ::EndianHelper<UnsignedType> host;
-        for(::std::size_t index=0;index<sizeof(UnsignedType);++index){
-            host.byte_array[sizeof(UnsignedType)-1-index]=
-                net.byte_array[index];
-        }
-        return host.number;
-    }
 }
 //============================================================================
 //打包模式相关
@@ -424,17 +356,7 @@ inline void unpack_package(
 ){
     //TODO
 }
-//============================================================================
-//终端打印相关
-//============================================================================
-static bool const std_cout_init=[](void){
-    //关闭与C语言的输入输出流同步
-    ::std::ios_base::sync_with_stdio(false);
-    //解除cin和cout的绑定
-    ::std::cin.tie(nullptr);
-    ::std::cout.tie(nullptr);
-    return true;
-}();
+//终端打印帮助信息
 inline void help(void){
     ::std::cout<<
 R"(Usages:
