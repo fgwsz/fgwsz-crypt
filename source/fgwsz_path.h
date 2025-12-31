@@ -43,7 +43,7 @@ inline ::std::filesystem::path parent_path(
     ::std::filesystem::path const& path
 ){
     auto absolute_path=::std::filesystem::absolute(path);
-    return absolute_path.parent_path();
+    return ::std::filesystem::absolute(absolute_path.parent_path());
 }
 inline ::std::filesystem::path relative_path(
     ::std::filesystem::path const& path

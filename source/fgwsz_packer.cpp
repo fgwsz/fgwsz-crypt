@@ -175,7 +175,10 @@ void Packer::pack_dir(::std::filesystem::path const& dir_path){
             continue;
         }
         //只对文件进行打包
-        this->pack_file(dir_entry.path(),dir_path);
+        this->pack_file(
+            ::std::filesystem::absolute(dir_entry.path())
+            ,::fgwsz::parent_path(dir_path)
+        );//基准目录路径指向dir_path的父目录,是为了把dir_path本身也打包进去
     }
 }
 void Packer::pack_path(::std::filesystem::path const& path){
