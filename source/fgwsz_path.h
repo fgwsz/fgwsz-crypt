@@ -39,6 +39,13 @@ inline void path_assert_is_not_symlink(::std::filesystem::path const& path){
         FGWSZ_THROW_WHAT("path is symlink: "+path.string());
     }
 }
+//一个特性(或者是BUG):
+//情况一:目录路径:a/b/c    ->父路径:a/b
+//情况二:目录路径:a/b/c/   ->父路径:a/b/c
+//注意:情况二中的目录路径最后的那个'/',它会改变parent_path的结果
+//但是这个特性有一个妙用:
+//目录路径a/b/c表示:指向路径为a/b/c的名为c的目录
+//目录路径a/b/c/表示:匹配到路径为a/b/c的名为c的目录下的所有子目录/文件
 inline ::std::filesystem::path parent_path(
     ::std::filesystem::path const& path
 ){
