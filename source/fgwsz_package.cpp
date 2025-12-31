@@ -15,8 +15,8 @@ R"(Usages:
     Pack  : -c <output package path> <input path 1> ... <input path N>
     Unpack: -x <input package path> <output directory path>
 Examples:
-    Pack a file and directory: -c mypkg.fgwsz README.md source
-    Unpack                   : -x mypkg.fgwsz output
+    Pack a file and directory: -c 0.fgwsz README.md source
+    Unpack                   : -x 0.fgwsz output
 )";
 }
 
