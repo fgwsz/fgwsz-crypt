@@ -129,6 +129,7 @@ void Unpacker::unpack_package(::std::filesystem::path const& output_dir_path){
                 static_cast<char>(static_cast<::std::uint8_t>(ch)^key)
             );
         }
+        ::fgwsz::path_assert_is_safe_relative_path(relative_path_string);
         //读取content bytes
         buffer.resize(sizeof(content_bytes));
         read_bytes=::fgwsz::std_ifstream_read(
