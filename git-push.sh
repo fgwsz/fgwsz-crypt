@@ -7,7 +7,7 @@ if [ "$commit_info" != "q" ]; then
     git add ./source/*
     git add ./CMakeLists.txt
     git add ./LICENSE
-    git add ./README.md
+    git add ./README*.md
     git add ./.gitignore
     git add ./*.ps1
     git add ./*.sh
