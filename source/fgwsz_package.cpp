@@ -34,7 +34,6 @@ int main(int argc,char* argv[]){
     }
     try{
         if('c'==option[1]){//打包模式
-            ::fgwsz::Packer packer(argv[2]);
             ::std::vector<::std::filesystem::path> paths;
             paths.reserve(argc-3);
             for(int index=3;index<argc;++index){
@@ -53,6 +52,7 @@ int main(int argc,char* argv[]){
             if(!has_next){
                 return -1;
             }
+            ::fgwsz::Packer packer(argv[2]);
             packer.pack_paths(paths);
         }else{//解包模式
             //排除解包模式输入参数过多的情况
