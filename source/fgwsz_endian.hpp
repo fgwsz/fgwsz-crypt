@@ -2,6 +2,7 @@
 #define FGWSZ_ENDIAN_HPP
 
 #include<cstdint>//::std::uint8_t
+#include<bit>    //::std::endian
 
 //============================================================================
 //字节序相关
