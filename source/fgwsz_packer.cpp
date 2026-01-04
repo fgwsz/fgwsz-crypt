@@ -6,6 +6,7 @@
 #include<filesystem>//::std::filesystem
 #include<fstream>   //::std::ofstream ::std::ifstream
 #include<vector>    //::std::vector
+#include<memory>    //::std::unique_ptr
 
 #include"fgwsz_endian.hpp"
 #include"fgwsz_except.h"
@@ -57,6 +58,8 @@ void Packer::pack_file(
 #ifndef _MSC_VER
     auto key=::fgwsz::random<::std::uint8_t>(1,255);
 #else
+    //MSVC中没有实现特化类型为::std::uint8_t的随机数生成器
+    //因此改为使用更大取值范围的无符号整数类型转到::std::uint8_t
     auto key=
         static_cast<::std::uint8_t>(::fgwsz::random<unsigned short>(1,255));
 #endif
@@ -123,7 +126,13 @@ void Packer::pack_file(
     }
     //设置内存块
     constexpr ::std::uint64_t block_bytes=1024*1024;//1MB
+#ifndef _MSC_VER
     char block[block_bytes];
+#else
+    //MSVC中栈全部内存默认1MB,直接分配在栈上会导致栈溢出,改为分配在堆上
+    auto block_body=::std::make_unique<char[]>(block_bytes);
+    char* block=block_body.get();
+#endif
     //分块读取文件内容
     ::std::uint64_t count_bytes=0;
     ::std::uint64_t read_bytes=0;
