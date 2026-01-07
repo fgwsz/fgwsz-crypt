@@ -13,6 +13,7 @@
 #include"fgwsz_path.h"
 #include"fgwsz_random.hpp"
 #include"fgwsz_fstream.h"
+#include"fgwsz_encoding.h"
 
 namespace fgwsz{
 
@@ -68,7 +69,14 @@ void Packer::pack_file(
     //检查文件的相对路径是否安全(不安全情况,存在溢出输出目录的风险)
     ::fgwsz::path_assert_is_safe_relative_path(relative_path);
     //得到相对路径和相对路径的所占用的字节数
+#ifndef _WIN32
     ::std::string relative_path_string=relative_path.generic_string();
+#else
+    //修正windows平台的相对路径编码问题
+    ::std::string relative_path_string=::fgwsz::auto_to_utf8(
+        relative_path.generic_string()
+    );
+#endif
     ::std::uint64_t relative_path_bytes=relative_path_string.size();
     //得到文件内容字节数
     ::std::uint64_t content_bytes=::std::filesystem::file_size(file_path);

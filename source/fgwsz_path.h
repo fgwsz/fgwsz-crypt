@@ -3,7 +3,7 @@
 
 #include<filesystem>//::std::filesystem
 
-#include"fgwsz_except.h"//FGWSZ_THROW_WHAT
+#include"fgwsz_except.h"
 
 //============================================================================
 //路径操作相关
