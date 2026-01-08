@@ -12,6 +12,7 @@
 #include"fgwsz_except.h"
 #include"fgwsz_path.h"
 #include"fgwsz_fstream.h"
+#include"fgwsz_encoding.h"
 
 namespace fgwsz{
 
@@ -163,8 +164,17 @@ void Unpacker::unpack_package(::std::filesystem::path const& output_dir_path){
         //文件内容信息处理阶段
         //====================================================================
         //创建文件父目录
+#ifndef _WIN32
         file_path=
             ::std::filesystem::absolute(output_dir_path/relative_path_string);
+#else
+        file_path=::std::filesystem::absolute(
+            output_dir_path
+            /::std::filesystem::path(
+                ::fgwsz::utf8_to_wide(relative_path_string)
+            )
+        );
+#endif
         ::fgwsz::try_create_directories(
             ::fgwsz::parent_path(file_path)
         );

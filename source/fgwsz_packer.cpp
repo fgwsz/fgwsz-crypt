@@ -73,8 +73,8 @@ void Packer::pack_file(
     ::std::string relative_path_string=relative_path.generic_string();
 #else
     //修正windows平台的相对路径编码问题
-    ::std::string relative_path_string=::fgwsz::auto_to_utf8(
-        relative_path.generic_string()
+    ::std::string relative_path_string=::fgwsz::wide_to_utf8(
+        relative_path.wstring()
     );
 #endif
     ::std::uint64_t relative_path_bytes=relative_path_string.size();
