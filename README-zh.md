@@ -85,3 +85,13 @@ Examples:
         |----hello_world.cpp
         +----README.md
 ```
+
+编码问题:
+
+```txt
+linux操作系统默认使用utf-8编码,无需设置.
+
+windows操作系统请先设置全局编码为utf-8编码,设置方式如下:
+    区域设置->勾选"Beta:使用 Unicode UTF-8 提供全球语言支持"选项
+    由此,可以避免在windows系统使用本软件的时候出现编码错误.
+```

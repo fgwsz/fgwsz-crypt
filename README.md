@@ -89,3 +89,12 @@ Case 2: Using a directory path (with '/' at the end) for packing and unpacking
         |----hello_world.cpp
         +----README.md
 ```
+Coding Issues:
+
+```txt
+The Linux operating system uses UTF-8 encoding by default, so no settings are required.
+
+For the Windows operating system, please first set the global encoding to UTF-8. The setting method is as follows:
+    Region Settings → Check the option "Beta: Use Unicode UTF-8 for worldwide language support"
+    This will prevent encoding errors when using this software on the Windows system.
+```
