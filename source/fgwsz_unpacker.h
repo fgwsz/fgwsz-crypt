@@ -47,12 +47,9 @@ private:
     );
     void unpack_content(
         ::std::uint64_t& package_count_bytes
-        ,::std::uint8_t key
+        ,Header const& header
         ,char* block
         ,::std::uint64_t block_bytes
-        ,::std::filesystem::path const& output_dir_path
-        ,::std::string const& relative_path_string
-        ,::std::uint64_t content_bytes
     );
     ::std::ifstream package_;
     ::std::string package_path_string_;

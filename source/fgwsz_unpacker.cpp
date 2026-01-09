@@ -144,6 +144,17 @@ void Unpacker::unpack_header(
     ::std::uint64_t& package_count_bytes
     ,Header& header
 ){
+    //读取key
+    header.key=this->unpack_key(package_count_bytes);
+    //读取relative path bytes
+    header.relative_path_bytes=
+        this->unpack_relative_path_bytes(package_count_bytes,key);
+    //读取relative path
+    header.relative_path_string=this->unpack_relative_path_string(
+        package_count_bytes,key,relative_path_bytes
+    );
+    //读取content bytes
+    header.content_bytes=this->unpack_content_bytes(package_count_bytes,key);
 }
 void Unpacker::unpack_content(
     ::std::uint64_t& package_count_bytes
@@ -215,25 +226,12 @@ void Unpacker::unpack_package(::std::filesystem::path const& output_dir_path){
     //用于记录已读取包内容字节数的计数器
     ::std::uint64_t package_count_bytes=0;
     //文件头信息变量
-    ::std::uint8_t key=0;
-    ::std::uint64_t relative_path_bytes=0;
-    ::std::string relative_path_string={};
-    ::std::uint64_t content_bytes=0;
+    ::fgwsz::Unpacker::Header header;
     while(package_count_bytes<(this->package_bytes_)){
         //====================================================================
         //文件头信息处理阶段
         //====================================================================
-        //读取key
-        key=this->unpack_key(package_count_bytes);
-        //读取relative path bytes
-        relative_path_bytes=
-            this->unpack_relative_path_bytes(package_count_bytes,key);
-        //读取relative path
-        relative_path_string=this->unpack_relative_path_string(
-            package_count_bytes,key,relative_path_bytes
-        );
-        //读取content bytes
-        content_bytes=this->unpack_content_bytes(package_count_bytes,key);
+        this->unpack_header(package_count_bytes,header);
         //====================================================================
         //文件内容信息处理阶段
         //====================================================================
