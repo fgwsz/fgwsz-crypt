@@ -24,11 +24,13 @@ fgwsz-package归档一个或多个(文件/目录)的包标准:
 
 ```txt
 Usages:
-    Pack  : -c <output package path> <input path 1> ... <input path N>
-    Unpack: -x <input package path> <output directory path>
+    Pack  : -c <output-package-path> <input-path-1> [<input-path-2> ...]
+    Unpack: -x <input-package-path> <output-directory-path>
+    List  : -l <input-package-path>
 Examples:
     Pack a file and directory: -c 0.fgwsz README.md source
     Unpack                   : -x 0.fgwsz output
+    List package contents    : -l 0.fgwsz
 ```
 
 一个特性(不是漏洞):

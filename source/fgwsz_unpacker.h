@@ -15,6 +15,8 @@ public:
     ~Unpacker(void);
     //解包到指定的输出目录下
     void unpack_package(::std::filesystem::path const& output_dir_path);
+    //显示包内的文件信息
+    void list_package(void);
     //禁止拷贝
     Unpacker(Unpacker const&)noexcept=delete;
     Unpacker& operator=(Unpacker const&)noexcept=delete;

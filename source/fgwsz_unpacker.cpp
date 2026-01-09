@@ -12,6 +12,7 @@
 #include"fgwsz_except.h"
 #include"fgwsz_path.h"
 #include"fgwsz_fstream.h"
+#include"fgwsz_cout.h"
 
 namespace fgwsz{
 
@@ -202,6 +203,131 @@ void Unpacker::unpack_package(::std::filesystem::path const& output_dir_path){
         }
         //关闭文件输出流与当前文件路径的关联
         file.close();
+    }
+    if(package_count_bytes!=this->package_bytes_){
+        FGWSZ_THROW_WHAT(
+            "package read incomplete: "+this->package_path_string_
+        );
+    }
+}
+//显示包内的文件信息
+void Unpacker::list_package(void){
+    //用于读取文件头信息的缓冲区
+    ::std::vector<char> buffer={};
+    //用于记录已读取包内容字节数的计数器
+    ::std::uint64_t package_count_bytes=0;
+    //用于实时记录每次读取的包内容字节数
+    ::std::uint64_t read_bytes=0;
+    //文件头信息变量
+    ::std::uint8_t key=0;
+    ::std::uint64_t relative_path_bytes=0;
+    ::std::string relative_path_string={};
+    ::std::uint64_t content_bytes=0;
+    //字节序辅助结构体
+    ::fgwsz::EndianHelper<::std::uint64_t> net;
+    //文件id
+    ::std::uint64_t file_id=0;
+    while(package_count_bytes<(this->package_bytes_)){
+        ::fgwsz::cout<<"file["<<file_id<<"]:\n";
+        //====================================================================
+        //文件头信息处理阶段
+        //====================================================================
+        //读取key
+        buffer.resize(sizeof(key));
+        read_bytes=::fgwsz::std_ifstream_read(
+            this->package_
+            ,buffer.data()
+            ,sizeof(key)
+            ,this->package_path_string_
+        );
+        if(sizeof(key)!=read_bytes){
+            FGWSZ_THROW_WHAT(
+                "failed to read key: "+this->package_path_string_
+            );
+        }
+        package_count_bytes+=static_cast<::std::uint64_t>(read_bytes);
+        key=static_cast<::std::uint8_t>(buffer[0]);
+        ::fgwsz::cout<<"\tkey: "<<static_cast<unsigned>(key)<<'\n';
+        //读取relative path bytes
+        buffer.resize(sizeof(relative_path_bytes));
+        read_bytes=::fgwsz::std_ifstream_read(
+            this->package_
+            ,buffer.data()
+            ,sizeof(relative_path_bytes)
+            ,this->package_path_string_
+        );
+        if(sizeof(relative_path_bytes)!=read_bytes){
+            FGWSZ_THROW_WHAT(
+                "failed to read relative path bytes: "
+                +this->package_path_string_
+            );
+        }
+        package_count_bytes+=static_cast<::std::uint64_t>(read_bytes);
+        //解码relative path bytes的文件密钥xor混淆
+        for(::std::uint8_t index=0;index<sizeof(::std::uint64_t);++index){
+            net.byte_array[index]=
+                static_cast<::std::uint8_t>(buffer[index])^key;
+        }
+        //将网络序转换为主机序,得到relative path bytes
+        relative_path_bytes=::fgwsz::net_to_host<::std::uint64_t>(net.data);
+        ::fgwsz::cout<<"\trelative path bytes: "<<relative_path_bytes<<'\n';
+        //读取relative path
+        buffer.resize(relative_path_bytes);
+        read_bytes=::fgwsz::std_ifstream_read(
+            this->package_
+            ,buffer.data()
+            ,relative_path_bytes
+            ,this->package_path_string_
+        );
+        if(relative_path_bytes!=read_bytes){
+            FGWSZ_THROW_WHAT(
+                "failed to read relative path: "+this->package_path_string_
+            );
+        }
+        package_count_bytes+=static_cast<::std::uint64_t>(read_bytes);
+        //解码relative path的文件密钥xor混淆
+        relative_path_string.clear();
+        relative_path_string.reserve(relative_path_bytes);
+        for(char ch:buffer){
+            relative_path_string.push_back(
+                static_cast<char>(static_cast<::std::uint8_t>(ch)^key)
+            );
+        }
+        ::fgwsz::cout<<"\trelative path: "<<relative_path_string<<'\n';
+        //读取content bytes
+        buffer.resize(sizeof(content_bytes));
+        read_bytes=::fgwsz::std_ifstream_read(
+            this->package_
+            ,buffer.data()
+            ,sizeof(content_bytes)
+            ,this->package_path_string_
+        );
+        if(sizeof(content_bytes)!=read_bytes){
+            FGWSZ_THROW_WHAT(
+                "failed to read content bytes: "+this->package_path_string_
+            );
+        }
+        package_count_bytes+=static_cast<::std::uint64_t>(read_bytes);
+        //解码content bytes的文件密钥xor混淆
+        for(::std::uint64_t index=0;index<sizeof(::std::uint64_t);++index){
+            net.byte_array[index]=
+                static_cast<::std::uint8_t>(buffer[index])^key;
+        }
+        //将网络序转换为主机序,得到content bytes
+        content_bytes=::fgwsz::net_to_host<::std::uint64_t>(net.data);
+        ::fgwsz::cout<<"\tcontent bytes: "<<content_bytes<<'\n';
+        //====================================================================
+        //文件内容信息跳过阶段
+        //====================================================================
+        this->package_.seekg(content_bytes,::std::ios::cur);
+        if(!this->package_.good()){
+            FGWSZ_THROW_WHAT(
+                "failed to skip content bytes: "+relative_path_string
+            );
+        }
+        package_count_bytes+=content_bytes;
+        //更新文件id
+        ++file_id;
     }
     if(package_count_bytes!=this->package_bytes_){
         FGWSZ_THROW_WHAT(
